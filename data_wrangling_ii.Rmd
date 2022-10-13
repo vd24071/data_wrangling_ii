@@ -1,0 +1,112 @@
+---
+title: "Data Wrangling II"
+author: Vanessa Dinh
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(httr)
+
+```
+
+```{r}
+url = "http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm"
+drug_use_html = read_html(url)
+
+drug_use_html
+```
+
+```{r}
+drug_use_html %>% 
+  html_table() %>% 
+  first() %>% 
+  slice(-1)
+```
+
+## SW data
+
+```{r}
+url = "https://www.imdb.com/list/ls070150896/"
+
+swm_html = read_html(url)
+```
+
+How do I get the stuff I want
+
+```{r}
+sw_titles = 
+  swm_html %>% 
+  html_elements(".lister-item-header a") %>% 
+  html_text()
+
+sw_runtime = 
+  swm_html %>% 
+  html_elements(".runtime") %>% 
+  html_text()
+
+
+sw_money = 
+  swm_html %>% 
+  html_elements(".text-small:nth-child(7) span:nth-child(5)") %>% 
+  html_text() 
+
+sw_df =
+  tibble(
+    title = sw_titles,
+    runtime = sw_runtime,
+    money = sw_money
+  )
+```
+```{r}
+url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
+
+dynamite_html = read_html(url)
+
+review_titles = 
+  dynamite_html %>%
+  html_elements(".a-text-bold span") %>%
+  html_text()
+
+review_stars = 
+  dynamite_html %>%
+  html_elements("#cm_cr-review_list .review-rating") %>%
+  html_text()
+
+review_text = 
+  dynamite_html %>%
+  html_elements(".review-text-content span") %>%
+  html_text()
+
+reviews = tibble(
+  title = review_titles,
+  stars = review_stars,
+  text = review_text
+)
+```
+
+## APIs
+
+```{r}
+water_df = 
+  GET("https://data.cityofnewyork.us/resource/ia2d-e54m.csv") %>% 
+  content("parsed")
+```
+
+```{r}
+brfss_smart2010 = 
+  GET("https://chronicdata.cdc.gov/resource/acme-vg9e.csv",
+      query = list("$limit" = 5000)) %>% 
+  content("parsed")
+```
+
+```{r}
+poke = 
+  GET("http://pokeapi.co/api/v2/pokemon/1") %>%
+  content()
+
+poke$name
+```
+
+
